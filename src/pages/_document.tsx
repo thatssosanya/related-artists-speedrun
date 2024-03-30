@@ -1,11 +1,16 @@
+import { ColorSchemeScript } from "@mantine/core"
 import { Head, Html, Main, NextScript } from "next/document"
 
 export default function Document() {
   return (
     <Html lang="en">
-      <Head />
+      <Head>
+        <ColorSchemeScript defaultColorScheme="auto" />
+      </Head>
       <body>
-        <Main />
+        <main>
+          <Main />
+        </main>
         <NextScript />
       </body>
     </Html>
