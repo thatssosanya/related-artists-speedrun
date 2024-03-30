@@ -27,7 +27,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const { artists } = req.body
 
     if (!Array.isArray(artists)) {
-      return res.status(400).json({ error: "Invalid input. Expected an array of artists." })
+      return res.status(400).json({ error: "Invalid input. Expected an array of artists" })
     }
 
     const validArtists: ArtistInput[] = []
@@ -43,7 +43,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     if (invalidArtists.length > 0) {
       return res.status(400).json({
-        error: "Invalid input. Some artists have missing or invalid fields.",
+        error: "Invalid input. Some artists have invalid fields",
         invalidArtists,
       })
     }

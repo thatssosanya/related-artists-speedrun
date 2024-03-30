@@ -2,7 +2,7 @@
 import { Artist, PrismaClient } from "@prisma/client"
 import { NextApiRequest, NextApiResponse } from "next"
 
-import { getSpotifyAccessToken, getSpotifyRelatedArtists } from "@/utils/api"
+import { getSpotifyAccessToken, getSpotifyRelatedArtists, spotifyArtistToArtist } from "@/utils/api"
 
 const prisma = new PrismaClient()
 
@@ -16,33 +16,37 @@ async function getRelatedArtists(artistId: string, token: string) {
     token,
   )
 
-  const { artists: fasterArtists, source } = await Promise.race([
+  const { artists: dbArtists, source } = await Promise.race([
     dbPromise.then((artists) => ({ artists, source: "db" })),
     getSpotifyRelatedArtistsPromise.then((artists) => ({ artists, source: "spotify" })),
   ])
 
-  if (source === "db" && fasterArtists.length > 0) {
+  if (source === "db" && dbArtists.length > 0) {
     // If db returns first and has data, cancel the Spotify request and return db data
     cancelGetSpotifyRelatedArtistsPromise()
 
-    return fasterArtists
-  } else {
-    const spotifyArtists = await getSpotifyRelatedArtistsPromise
-    // If Spotify returns first or db doesn't have data, save Spotify data to db and return it
-    await prisma.artist.update({
-      where: { id: artistId },
-      data: { relatedArtists: { set: spotifyArtists } },
-    })
-
-    return spotifyArtists
+    return dbArtists
   }
+
+  const spotifyArtists = await getSpotifyRelatedArtistsPromise.then((artists) => artists.map(spotifyArtistToArtist))
+  // If Spotify returns first or db doesn't have data, save Spotify data to db and return it
+  prisma.artist.update({
+    where: { id: artistId },
+    data: {
+      relatedArtists: {
+        connectOrCreate: spotifyArtists.map((artist) => ({ where: { id: artist.id }, create: artist })),
+      },
+    },
+  })
+
+  return spotifyArtists
 }
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "POST") {
-    const { artist, sessionId, token: userToken } = req.body
+    const { artistId, sessionId, token: userToken } = req.body
 
-    if (!artist || !sessionId) {
+    if (!artistId || !sessionId) {
       try {
         // Create a new Session with random starting artist and end artist
         const [startArtist, endArtist] = await prisma.$queryRawUnsafe<Artist[]>(
@@ -53,24 +57,34 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           throw new Error("Couldn't find two artists to start and end with")
         }
 
-        const session = await prisma.session.create({
+        const sessionPromise = prisma.session.create({
           data: {
             startArtistId: startArtist.id,
             endArtistId: endArtist.id,
           },
         })
-
-        await prisma.play.create({
-          data: {
-            sessionId: session.id,
-            artistId: startArtist.id,
-          },
+        sessionPromise.then((session) => {
+          prisma.play.create({
+            data: {
+              sessionId: session.id,
+              artistId: startArtist.id,
+            },
+          })
         })
 
         const token = await getSpotifyAccessToken()
-        const relatedArtists = await getRelatedArtists(startArtist.id, token)
+        const relatedArtistsPromise = getRelatedArtists(startArtist.id, token)
 
-        res.status(200).json({ status: "play", relatedArtists, token: token })
+        const [session, relatedArtists] = await Promise.all([sessionPromise, relatedArtistsPromise])
+
+        res.status(200).json({
+          status: "play",
+          startArtist,
+          endArtist,
+          relatedArtists: relatedArtists.slice(0, 9),
+          sessionId: session.id,
+          token: token,
+        })
       } catch (error) {
         console.error(error)
         res.status(500).json({ error: "Internal server error" })
@@ -90,15 +104,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         await prisma.play.create({
           data: {
             sessionId,
-            artistId: artist,
+            artistId: artistId,
           },
         })
 
-        if (artist === session.endArtistId) {
+        if (artistId === session.endArtistId) {
           res.status(200).json({ status: "win" })
         } else {
           const token = userToken ?? (await getSpotifyAccessToken())
-          const relatedArtists = await getRelatedArtists(artist, token)
+          const relatedArtists = await getRelatedArtists(artistId, token)
 
           res.status(200).json({ status: "play", relatedArtists })
         }

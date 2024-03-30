@@ -4,7 +4,7 @@ import { NextApiRequest, NextApiResponse } from "next"
 import { Artist } from "@/types/client"
 import { SpotifyArtistSearchResponse } from "@/types/spotify"
 import { CouldError } from "@/types/util"
-import { getSpotifyAccessToken } from "@/utils/api"
+import { getSpotifyAccessToken, spotifyArtistToArtist } from "@/utils/api"
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<CouldError<Artist[]>>) => {
   if (req.method === "POST") {
@@ -47,18 +47,8 @@ const searchArtists = async (names: string[]): Promise<Artist[]> => {
         const data = (await response.json()) as SpotifyArtistSearchResponse
         const artist = data.artists.items[0]
         if (artist) {
-          const spotifyName = artist.name
-          const imageUrl = artist.images.reduce((closest, image) => {
-            if (!closest) {
-              return image
-            }
-            const closestDiff = Math.abs(closest.width - 300) + Math.abs(closest.height - 300)
-            const currentDiff = Math.abs(image.width - 300) + Math.abs(image.height - 300)
-
-            return currentDiff < closestDiff ? image : closest
-          }).url
-          console.log(`[${+i + 1}/${names.length}] ${name} -> ${spotifyName}: ${artist.id}`)
-          results.push({ id: artist.id, name: spotifyName, imageUrl })
+          console.log(`[${+i + 1}/${names.length}] ${name} -> ${artist.name}: ${artist.id}`)
+          results.push(spotifyArtistToArtist(artist))
         } else {
           console.log(`No artist found for name: ${name}`)
         }

@@ -65,3 +65,18 @@ export const getSpotifyRelatedArtists = (artistId: string, token?: string) => {
     }
   }
 }
+
+export const spotifyArtistToArtist = (artist: SpotifyArtist) => {
+  const spotifyName = artist.name
+  const imageUrl = artist.images.reduce((closest, image) => {
+    if (!closest) {
+      return image
+    }
+    const closestDiff = Math.abs(closest.width - 300) + Math.abs(closest.height - 300)
+    const currentDiff = Math.abs(image.width - 300) + Math.abs(image.height - 300)
+
+    return currentDiff < closestDiff ? image : closest
+  }).url
+
+  return { id: artist.id, name: spotifyName, imageUrl }
+}
