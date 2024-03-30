@@ -30,7 +30,7 @@ model Session {
 
 model Play {
   id        String   @id @default(uuid())
-  timestamp Int
+  createdAt DateTime @default(now())
   session   Session  @relation(fields: [sessionId], references: [id])
   sessionId String
   artist    Artist   @relation(fields: [artistId], references: [id])

@@ -1,18 +1,17 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-
 /* eslint-disable no-console */
 import { NextApiRequest, NextApiResponse } from "next"
 
 import { Artist } from "@/types/client"
-import { SpotifySearchResponse } from "@/types/spotify"
+import { SpotifyArtistSearchResponse } from "@/types/spotify"
 import { CouldError } from "@/types/util"
+import { getSpotifyAccessToken } from "@/utils/api"
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<CouldError<Artist[]>>) => {
   if (req.method === "POST") {
     const { names } = req.body
 
     if (!Array.isArray(names) || names.some((name) => typeof name !== "string")) {
-      res.status(400).json({ error: "Invalid request body. 'names' must be an array of strings." })
+      res.status(400).json({ error: "Invalid request body. 'names' must be an array of strings" })
 
       return
     }
@@ -22,15 +21,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<CouldError<Arti
       res.status(200).json(artists)
     } catch (error) {
       console.error("Error searching for artists: ", error)
-      res.status(500).json({ error: "An error occurred while searching for artists." })
+      res.status(500).json({ error: "An error occurred while querying the Spotify API. Please try again later" })
     }
   } else {
-    res.status(405).json({ error: "Method not allowed. Only POST requests are accepted." })
+    res.status(405).json({ error: "Method not allowed. Use POST" })
   }
 }
 
-async function searchArtists(names: string[]): Promise<Artist[]> {
-  const token = await getAccessToken()
+const searchArtists = async (names: string[]): Promise<Artist[]> => {
+  const token = await getSpotifyAccessToken()
   const results: Artist[] = []
 
   for (const [i, name] of Object.entries(names)) {
@@ -45,7 +44,7 @@ async function searchArtists(names: string[]): Promise<Artist[]> {
       )
 
       if (response.ok) {
-        const data = (await response.json()) as SpotifySearchResponse
+        const data = (await response.json()) as SpotifyArtistSearchResponse
         const artist = data.artists.items[0]
         if (artist) {
           const spotifyName = artist.name
@@ -74,34 +73,6 @@ async function searchArtists(names: string[]): Promise<Artist[]> {
   }
 
   return results
-}
-
-async function getAccessToken(): Promise<string> {
-  const clientId = process.env.SPOTIFY_CLIENT_ID
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET
-
-  if (!clientId || !clientSecret) {
-    throw new Error("Missing Spotify client ID or client secret.")
-  }
-
-  const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64")
-
-  const response = await fetch("https://accounts.spotify.com/api/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: `Basic ${basicAuth}`,
-    },
-    body: "grant_type=client_credentials",
-  })
-
-  if (response.ok) {
-    const data = await response.json()
-
-    return data.access_token
-  } else {
-    throw new Error(`Error retrieving access token: ${response.statusText}`)
-  }
 }
 
 export default handler

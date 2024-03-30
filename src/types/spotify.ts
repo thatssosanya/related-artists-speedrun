@@ -1,4 +1,4 @@
-export interface SpotifySearchArtist {
+export interface SpotifyArtist {
   external_urls: {
     spotify: string
   }
@@ -20,7 +20,7 @@ export interface SpotifySearchArtist {
   uri: string
 }
 
-export interface SpotifySearchResponse {
+export interface SpotifyArtistSearchResponse {
   artists: {
     href: string
     limit: number
@@ -28,6 +28,10 @@ export interface SpotifySearchResponse {
     offset: number
     previous: string | null
     total: number
-    items: Array<SpotifySearchArtist>
+    items: Array<SpotifyArtist>
   }
+}
+
+export interface SpotifyRelatedArtistsResponse {
+  artists: Array<SpotifyArtist>
 }
