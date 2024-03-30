@@ -82,7 +82,6 @@ module.exports = {
         format: ["UPPER_CASE"],
       },
     ],
-    "@typescript-eslint/no-use-before-define": "error",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/no-unused-vars": ["error", { varsIgnorePattern: "^_", argsIgnorePattern: "^_" }],
