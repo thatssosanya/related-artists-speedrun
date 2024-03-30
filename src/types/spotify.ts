@@ -31,10 +31,3 @@ export interface SpotifySearchResponse {
     items: Array<SpotifySearchArtist>
   }
 }
-
-export interface Artist {
-  id: string
-  name: string
-  imageUrl: string
-  relatedArtists?: string[]
-}

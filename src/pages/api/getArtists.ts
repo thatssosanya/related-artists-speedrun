@@ -3,7 +3,8 @@
 /* eslint-disable no-console */
 import { NextApiRequest, NextApiResponse } from "next"
 
-import { Artist, SpotifySearchResponse } from "@/types/spotify"
+import { Artist } from "@/types/client"
+import { SpotifySearchResponse } from "@/types/spotify"
 import { CouldError } from "@/types/util"
 
 const handler = async (req: NextApiRequest, res: NextApiResponse<CouldError<Artist[]>>) => {
