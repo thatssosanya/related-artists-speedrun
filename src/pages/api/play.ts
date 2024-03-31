@@ -54,7 +54,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<CouldError<Play
           status: "play",
           startArtist,
           endArtist,
-          relatedArtists: relatedArtists.slice(0, 9),
+          relatedArtists,
           sessionId: session.id,
           token: token,
         })
