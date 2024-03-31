@@ -82,7 +82,7 @@ const Play = () => {
           if (playResponseIsWinning(response)) {
             setGuesses((prev) => [...prev, { artist: findPickedArtist(prev, artist.id)!, relatedArtists: [] }])
 
-            return confetti()
+            return confetti(confettiOptions)
           } else if (response.relatedArtists) {
             setGuesses((prev) => [
               ...prev,
@@ -123,14 +123,14 @@ const Play = () => {
             </Container>
             {status === "new" && (
               <Container>
-                <Button color="green" onClick={() => handleStart()} loading={isPostPlayLoadingOrFetching}>
+                <Button size="xl" color="green" onClick={() => handleStart()} loading={isPostPlayLoadingOrFetching}>
                   Start
                 </Button>
               </Container>
             )}
             {status === "win" && (
               <Container>
-                <Button color="green" onClick={() => resetState()} loading={isPostPlayLoadingOrFetching}>
+                <Button size="xl" color="green" onClick={() => resetState()} loading={isPostPlayLoadingOrFetching}>
                   Play again
                 </Button>
               </Container>
@@ -148,7 +148,7 @@ const Play = () => {
                         </Center>
                         <Center>
                           <Paper bg="gray.8" shadow="md" p="sm">
-                            <Title order={3}>Reach {endArtist.name}</Title>
+                            <Title order={3}>Find a path to {endArtist.name}</Title>
                           </Paper>
                         </Center>
                       </Stack>
@@ -275,6 +275,18 @@ const ArtistCard = ({
 
 const ArtistImage = ({ url, alt }: { url: string; alt: string }) => {
   return <Image src={url} width="120" height="120" alt={alt} />
+}
+
+const confettiOptions = {
+  origin: {
+    y: 0.9,
+  },
+  gravity: 1.5,
+  ticks: 100,
+  spread: 180,
+  particleCount: 500,
+  startVelocity: 75,
+  disableForReducedMotion: true,
 }
 
 export default Play
