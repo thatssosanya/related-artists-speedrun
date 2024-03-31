@@ -1,17 +1,18 @@
 /* eslint-disable no-console */
+import { Artist } from "@prisma/client"
 import { NextApiRequest, NextApiResponse } from "next"
 
-import { Artist } from "@/types/client"
+import { SearchArtistsResponse } from "@/types/nextApi"
 import { SpotifyArtistSearchResponse } from "@/types/spotify"
 import { CouldError } from "@/types/util"
 import { getSpotifyAccessToken, spotifyArtistToArtist } from "@/utils/api"
 
-const handler = async (req: NextApiRequest, res: NextApiResponse<CouldError<Artist[]>>) => {
+const handler = async (req: NextApiRequest, res: NextApiResponse<CouldError<SearchArtistsResponse>>) => {
   if (req.method === "POST") {
     const { names } = req.body
 
     if (!Array.isArray(names) || names.some((name) => typeof name !== "string")) {
-      res.status(400).json({ error: "Invalid request body. 'names' must be an array of strings" })
+      res.status(400).json({ message: "Invalid request body. 'names' must be an array of strings" })
 
       return
     }
@@ -21,10 +22,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse<CouldError<Arti
       res.status(200).json(artists)
     } catch (error) {
       console.error("Error searching for artists: ", error)
-      res.status(500).json({ error: "An error occurred while querying the Spotify API. Please try again later" })
+      res.status(500).json({ message: "An error occurred while querying the Spotify API" })
     }
   } else {
-    res.status(405).json({ error: "Method not allowed. Use POST" })
+    res.status(405).json({ message: "Method not allowed. Use POST" })
   }
 }
 

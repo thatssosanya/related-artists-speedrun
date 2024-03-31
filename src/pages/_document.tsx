@@ -8,9 +8,7 @@ const Document = () => {
         <ColorSchemeScript defaultColorScheme="auto" />
       </Head>
       <body>
-        <main>
-          <Main />
-        </main>
+        <Main />
         <NextScript />
       </body>
     </Html>

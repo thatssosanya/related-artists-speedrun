@@ -1,0 +1,12 @@
+.responsiveContainer {
+  max-width: 100%;
+  @media (min-width: $mantine-breakpoint-md) {
+    max-width: $mantine-breakpoint-md;
+  }
+  @media (min-width: $mantine-breakpoint-lg) {
+    max-width: $mantine-breakpoint-lg;
+  }
+  @media (min-width: $mantine-breakpoint-xl) {
+    max-width: $mantine-breakpoint-xl;
+  }
+}

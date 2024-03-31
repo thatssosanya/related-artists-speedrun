@@ -1,10 +1,8 @@
 /* eslint-disable no-console */
 import axios from "axios"
-import _ from "lodash"
 
+import { PlayResponse, WinningPlayResponse } from "@/types/nextApi"
 import { SpotifyArtist, SpotifyRelatedArtistsResponse } from "@/types/spotify"
-
-const controller = new AbortController()
 
 export const getSpotifyAccessToken = async (): Promise<string> => {
   const clientId = process.env.SPOTIFY_CLIENT_ID
@@ -37,32 +35,18 @@ export const getSpotifyAccessToken = async (): Promise<string> => {
 
 export const getSpotifyRelatedArtists = (artistId: string, token?: string) => {
   try {
-    const promise = (!token ? getSpotifyAccessToken() : Promise.resolve(token)).then((token) => {
+    return (!token ? getSpotifyAccessToken() : Promise.resolve(token)).then((token) => {
       return axios
         .get<SpotifyRelatedArtistsResponse>(`https://api.spotify.com/v1/artists/${artistId}/related-artists`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          signal: controller.signal,
         })
         .then((r) => r.data.artists)
     })
-
-    return { getSpotifyRelatedArtistsPromise: promise, cancelGetSpotifyRelatedArtistsPromise: controller.abort }
   } catch (error) {
-    if (axios.isCancel(error)) {
-      // Handle cancellation
-      console.log("Spotify request canceled")
-
-      return {
-        getSpotifyRelatedArtistsPromise: Promise.resolve([] as Array<SpotifyArtist>),
-        cancelGetSpotifyRelatedArtistsPromise: _.noop,
-      }
-    } else {
-      // Handle other errors
-      console.error("Error fetching related artists from Spotify: ", error)
-      throw error
-    }
+    console.error("Error fetching related artists from Spotify: ", error)
+    throw error
   }
 }
 
@@ -79,4 +63,8 @@ export const spotifyArtistToArtist = (artist: SpotifyArtist) => {
   }).url
 
   return { id: artist.id, name: spotifyName, imageUrl }
+}
+
+export const playResponseIsWinning = (response: PlayResponse): response is WinningPlayResponse => {
+  return response.status === "win"
 }
